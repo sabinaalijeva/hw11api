@@ -1,23 +1,18 @@
 import { expect, test } from '@playwright/test'
 
 import { StatusCodes } from 'http-status-codes'
+import { ProductDTO } from '../src/dto/ProductDTO'
 
 test.describe('Lesson 11 -> Product API tests', () => {
   const BaseEndpointURL = 'https://backend.tallinn-learning.ee/products'
   const AUTH = { 'X-API-Key': 'my-secret-api-key' }
-  type Product = {
-    id: number
-    name: string
-    price: number
-    createdAt: string | null
-  }
 
   test('GET /products - check API returns array with length >= 1', async ({ request }) => {
     const response = await request.get(BaseEndpointURL, {
       headers: AUTH,
     })
 
-    const responseBody: Product[] = await response.json()
+    const responseBody: ProductDTO[] = await response.json()
     expect(response.status()).toBe(StatusCodes.OK)
     expect(responseBody.length).toBeDefined()
     expect(responseBody.length).toBeGreaterThanOrEqual(1)
@@ -26,19 +21,14 @@ test.describe('Lesson 11 -> Product API tests', () => {
   test('POST /products; GET /products/{id} - check product creation and product search by id', async ({
     request,
   }) => {
-    const testProduct: Product = {
-      id: 0,
-      name: 'test lesson 11',
-      price: 124523643,
-      createdAt: '2026-03-23T18:04:11.285Z',
-    }
+    const testProduct = ProductDTO.generateDefault()
 
     const createResponse = await request.post(BaseEndpointURL, {
       headers: AUTH,
       data: testProduct,
     })
 
-    const createResponseBody: Product = await createResponse.json()
+    const createResponseBody: ProductDTO = await createResponse.json()
     expect(createResponseBody.id).toBeGreaterThan(0)
     expect(createResponseBody.name).toBe(testProduct.name)
     expect(createResponseBody.price).toBe(testProduct.price)
@@ -47,7 +37,7 @@ test.describe('Lesson 11 -> Product API tests', () => {
     const searchResponse = await request.get(`${BaseEndpointURL}/${createResponseBody.id}`, {
       headers: AUTH,
     })
-    const searchResponseBody: Product = await searchResponse.json()
+    const searchResponseBody: ProductDTO = await searchResponse.json()
     expect(searchResponse.status()).toBe(StatusCodes.OK)
     expect.soft(searchResponseBody.id).toBe(createResponseBody.id)
     expect.soft(searchResponseBody.name).toBe(testProduct.name)
@@ -64,18 +54,13 @@ test.describe('Lesson 11 -> Product API tests', () => {
   })
 
   test('DELETE /products - check product deletion', async ({ request }) => {
-    const testProduct: Product = {
-      id: 0,
-      name: 'test lesson 11',
-      price: 124523643,
-      createdAt: '2026-03-23T18:04:11.285Z',
-    }
+    const testProduct = ProductDTO.generateDefault()
 
     const createResponse = await request.post(BaseEndpointURL, {
       headers: AUTH,
       data: testProduct,
     })
-    const createResponseBody: Product = await createResponse.json()
+    const createResponseBody: ProductDTO = await createResponse.json()
 
     const deleteResponse = await request.delete(`${BaseEndpointURL}/${createResponseBody.id}`, {
       headers: AUTH,
@@ -84,38 +69,18 @@ test.describe('Lesson 11 -> Product API tests', () => {
     expect(deleteResponse.status()).toBe(204)
   })
 
-  // new tests
-
-  type ProductRequestDTO = {
-    name: string
-    price: number
-  }
-  type ProductResponseDTO = {
-    id: number
-    name: string
-    price: number
-    createdAt: string | null
-  }
-  type ProductUpdateDTO = {
-    name?: string
-    price?: number
-  }
   test('PUT /products/{id} - check product update (create-update-search)', async ({ request }) => {
-    const testProductCreate: ProductRequestDTO = {
-      name: 'sabtest',
-      price: 888,
-    }
+    const testProductCreate = ProductDTO.generateCustom('custom product', 100)
+
     const createResponse = await request.post(BaseEndpointURL, {
       headers: AUTH,
       data: testProductCreate,
     })
-    const createResponseBody: ProductResponseDTO = await createResponse.json()
+    const createResponseBody: ProductDTO = await createResponse.json()
     expect(createResponse.status()).toBe(StatusCodes.OK)
 
-    const testProductUpdate: ProductUpdateDTO = {
-      name: 'sabtest-update',
-      price: 1000,
-    }
+    const testProductUpdate = ProductDTO.generateCustom('custom product updated', 200)
+
     const updateResponse = await request.put(`${BaseEndpointURL}/${createResponseBody.id}`, {
       headers: AUTH,
       data: testProductUpdate,
@@ -125,21 +90,19 @@ test.describe('Lesson 11 -> Product API tests', () => {
     const searchResponse = await request.get(`${BaseEndpointURL}/${createResponseBody.id}`, {
       headers: AUTH,
     })
-    const searchResponseBody: ProductResponseDTO = await searchResponse.json()
-    expect(searchResponseBody.name).toBe('sabtest-update')
-    expect(searchResponseBody.price).toBe(1000)
+    const searchResponseBody: ProductDTO = await searchResponse.json()
+    expect(searchResponseBody.name).toBe('custom product updated')
+    expect(searchResponseBody.price).toBe(200)
   })
 
   test('GET /products/{id} - invalid API key', async ({ request }) => {
-    const testProductCreate: ProductRequestDTO = {
-      name: 'new_product',
-      price: 999,
-    }
+    const testProductCreate = ProductDTO.generateCustom('new_product', 999)
+
     const createResponse = await request.post(BaseEndpointURL, {
       headers: AUTH,
       data: testProductCreate,
     })
-    const createResponseBody: ProductResponseDTO = await createResponse.json()
+    const createResponseBody: ProductDTO = await createResponse.json()
     expect(createResponse.status()).toBe(StatusCodes.OK)
 
     const searchResponse = await request.get(`${BaseEndpointURL}/${createResponseBody.id}`, {

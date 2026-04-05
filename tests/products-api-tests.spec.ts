@@ -96,7 +96,7 @@ test.describe('Lesson 11 -> Product API tests', () => {
   })
 
   test('GET /products/{id} - invalid API key', async ({ request }) => {
-    const testProductCreate = ProductDTO.generateCustom('new_product',999)
+    const testProductCreate = ProductDTO.generateCustom('new_product', 999)
 
     const createResponse = await request.post(BaseEndpointURL, {
       headers: AUTH,

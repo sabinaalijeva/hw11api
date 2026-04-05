@@ -6,11 +6,12 @@ export class LoginDTO {
     this.password = password
   }
   static generateIncorrectPair(): LoginDTO {
-    return new LoginDTO("", "")
+    return new LoginDTO('', '')
   }
-  static generateCorrectPair(): LoginDTO{
+  static generateCorrectPair(): LoginDTO {
     return new LoginDTO(
-      process.env.USER || "missing user",
-      process.env.PASSWORD || "missing password"
-    )}
+      process.env.USER || 'missing user',
+      process.env.PASSWORD || 'missing password',
+    )
+  }
 }

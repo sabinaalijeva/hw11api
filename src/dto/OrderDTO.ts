@@ -22,13 +22,7 @@ export class OrderDTO {
     this.id = id
   }
   static generateDefault(): OrderDTO {
-    const dto = new OrderDTO(
-      'OPEN',
-      0,
-      'string',
-      'string',
-      'string',
-      0)
+    const dto = new OrderDTO('OPEN', 0, 'string', 'string', 'string', 0)
     return dto
   }
 }

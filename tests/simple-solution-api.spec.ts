@@ -19,7 +19,7 @@ test('get order with correct id should receive code 200', async ({ request }) =>
 
 test('post order with correct data should receive code 201', async ({ request }) => {
   // prepare request body
-  const dtoBody: OrderDTO = OrderDTO.generateDefault();
+  const dtoBody: OrderDTO = OrderDTO.generateDefault()
   // Send a POST request to the server
   const response = await request.post('https://backend.tallinn-learning.ee/test-orders', {
     data: dtoBody,

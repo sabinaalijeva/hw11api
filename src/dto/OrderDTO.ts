@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 export class OrderDTO {
   status: string
   courierId: number
@@ -26,3 +28,14 @@ export class OrderDTO {
     return dto
   }
 }
+
+export const OrderSchema = z.object({
+  status: z.string(),
+  courierId: z.number().nullable(),
+  customerName: z.string(),
+  customerPhone: z.string(),
+  comment: z.string(),
+  id: z.number(),
+})
+
+// export const OrderSchemaResponse

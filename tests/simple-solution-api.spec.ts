@@ -1,39 +1,78 @@
 import { expect, test } from '@playwright/test'
-
 import { StatusCodes } from 'http-status-codes'
-import { OrderDTO } from '../src/dto/OrderDTO'
+import { OrderDTO, OrderSchema } from '../src/dto/OrderDTO'
+import { createOrder, getJwt } from '../src/helpers/api-helper'
 
-test('get order with correct id should receive code 200', async ({ request }) => {
-  // Build and send a GET request to the server
-  const response = await request.get('https://backend.tallinn-learning.ee/test-orders/1')
-
-  // parse raw response body to json
-  const responseBody = await response.json()
-  const statusCode = response.status()
-
-  // Log the response status, body and headers
-  console.log('response body:', responseBody)
-  // Check if the response status is 200
-  expect(statusCode).toBe(200)
-})
+const ORDERS_URL = 'https://backend.tallinn-learning.ee/orders'
 
 test('post order with correct data should receive code 201', async ({ request }) => {
-  // prepare request body
-  const dtoBody: OrderDTO = OrderDTO.generateDefault()
-  // Send a POST request to the server
-  const response = await request.post('https://backend.tallinn-learning.ee/test-orders', {
-    data: dtoBody,
-  })
-  // parse raw response body to json
-  const responseBody = await response.json() //"age:20,title:'123'"
+  const token = await getJwt(request)
+
+  const response = await createOrder(request)
+
+  const responseBody: OrderDTO = await response.json()
   const statusCode = response.status()
 
-  // Log the response status and body
-  console.log('response status:', statusCode)
   console.log('response body:', responseBody)
   expect(statusCode).toBe(StatusCodes.OK)
-  // check that body.comment is string type
-  expect(typeof responseBody.comment).toBe('string')
-  // check that body.courierId is number type
-  expect(typeof responseBody.courierId).toBe('number')
+  const TestOrder = OrderSchema.parse(responseBody)
+  expect(TestOrder.id).not.toBeUndefined()
+  expect(TestOrder.status).toBe('OPEN')
+})
+
+test('get order with correct id should receive code 200', async ({ request }) => {
+  const token = await getJwt(request)
+
+  const response = await createOrder(request)
+  const responseBody: OrderDTO = await response.json()
+
+  const responseSearch = await request.get(`${ORDERS_URL}/${responseBody.id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  const responseBodySearch: OrderDTO = await responseSearch.json()
+  console.log('found created order:', responseBodySearch)
+  const statusCode = responseSearch.status()
+  expect(statusCode).toBe(200)
+  const TestSearchOrder = OrderSchema.parse(responseBodySearch)
+  expect(TestSearchOrder.id).not.toBeUndefined()
+  expect(TestSearchOrder.status).toBe('OPEN')
+})
+
+test('PUT /orders/{id}/status', async ({ request }) => {
+  const token = await getJwt(request)
+
+  const response = await createOrder(request)
+  const responseBody: OrderDTO = await response.json()
+
+  const putStatus = await request.put(`${ORDERS_URL}/${responseBody.id}/status`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { status: 'INPROGRESS' },
+  })
+  expect(putStatus.status()).toBe(200) // I get 403 here :(
+
+  const responseSearch = await request.get(`${ORDERS_URL}/${responseBody.id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const responseBodySearch: OrderDTO = await responseSearch.json()
+  console.log('found updated order:', responseBodySearch)
+  const TestSearchOrder = OrderSchema.parse(responseBodySearch)
+  expect(TestSearchOrder.status).toBe('INPROGRESS')
+})
+
+test('DELETE /orders/{id}/status', async ({ request }) => {
+  const token = await getJwt(request)
+  const response = await createOrder(request)
+  const responseBody: OrderDTO = await response.json()
+  const deleteStatus = await request.delete(`${ORDERS_URL}/${responseBody.id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  expect(deleteStatus.status()).toBe(200)
+  const responseDelete = await deleteStatus.text()
+  expect(responseDelete).toBe('true')
+
+  const responseSearch = await request.get(`${ORDERS_URL}/${responseBody.id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  expect(responseSearch.status()).toBe(404) // I get 200 with empty body...
 })

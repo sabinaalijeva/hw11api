@@ -21,6 +21,6 @@ test.describe('Login API Tests', () => {
     expect(token.length).toBeGreaterThan(0)
   })
 })
-export const LoginSchema =  z.string()
+export const LoginSchema = z.string()
 
 export type Login = z.infer<typeof LoginSchema>

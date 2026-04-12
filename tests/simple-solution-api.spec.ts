@@ -8,7 +8,7 @@ const ORDERS_URL = 'https://backend.tallinn-learning.ee/orders'
 test('post order with correct data should receive code 201', async ({ request }) => {
   const token = await getJwt(request)
 
-  const response = await createOrder(request)
+  const response = await createOrder(request, token)
 
   const responseBody: OrderDTO = await response.json()
   const statusCode = response.status()
@@ -23,7 +23,7 @@ test('post order with correct data should receive code 201', async ({ request })
 test('get order with correct id should receive code 200', async ({ request }) => {
   const token = await getJwt(request)
 
-  const response = await createOrder(request)
+  const response = await createOrder(request, token)
   const responseBody: OrderDTO = await response.json()
 
   const responseSearch = await request.get(`${ORDERS_URL}/${responseBody.id}`, {
@@ -42,7 +42,7 @@ test('get order with correct id should receive code 200', async ({ request }) =>
 test('PUT /orders/{id}/status', async ({ request }) => {
   const token = await getJwt(request)
 
-  const response = await createOrder(request)
+  const response = await createOrder(request, token)
   const responseBody: OrderDTO = await response.json()
 
   const putStatus = await request.put(`${ORDERS_URL}/${responseBody.id}/status`, {
@@ -62,7 +62,7 @@ test('PUT /orders/{id}/status', async ({ request }) => {
 
 test('DELETE /orders/{id}/status', async ({ request }) => {
   const token = await getJwt(request)
-  const response = await createOrder(request)
+  const response = await createOrder(request, token)
   const responseBody: OrderDTO = await response.json()
   const deleteStatus = await request.delete(`${ORDERS_URL}/${responseBody.id}`, {
     headers: { Authorization: `Bearer ${token}` },

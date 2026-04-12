@@ -12,9 +12,8 @@ export async function getJwt(request: APIRequestContext): Promise<string> {
   return await loginResponse.text()
 }
 
-export async function createOrder(request: APIRequestContext): Promise<APIResponse> {
-  const token = await getJwt(request)
-  return await request.post(ORDERS_URL, {
+export async function createOrder(request: APIRequestContext, token: string): Promise<APIResponse> {
+  return request.post(ORDERS_URL, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
